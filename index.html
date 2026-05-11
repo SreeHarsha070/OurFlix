@@ -548,7 +548,7 @@ button, input, select { font-family:var(--font-sans); }
 
 /* Help nav + content */
 .help-nav { position:sticky; top:0; z-index:10; padding:0 36px; height:58px; display:flex; align-items:center; gap:16px; background:rgba(20,20,20,0.98); border-bottom:1px solid rgba(255,255,255,0.06); backdrop-filter:blur(8px); }
-.help-back { cursor:pointer; color:var(--muted); font-size:0.83rem; display:flex; align-items:center; gap:6px; transition:color var(--transition); }
+.help-back { cursor:pointer; color:var(--muted); font-size:0.83rem; display:flex; align-items:center; gap:6px; transition:color var(--transition); padding:10px 0; }
 .help-back:hover { color:var(--white); }
 .help-logo { font-family:var(--font-serif); font-size:1.2rem; font-weight:900; color:var(--red); }
 .help-logo span { color:var(--white); }
@@ -1459,6 +1459,7 @@ let pinEntry = '';
 let helpUnlocked = false;
 
 function openHelp(){
+  history.pushState({screen:'help'},'');
   document.getElementById('appScreen').classList.remove('active');
   document.getElementById('helpScreen').classList.add('active');
   if(!helpUnlocked){
@@ -1481,6 +1482,7 @@ function helpBack(){
   sndBack();
   document.getElementById('helpScreen').classList.remove('active');
   document.getElementById('appScreen').classList.add('active');
+  if(history.state&&history.state.screen==='help'){history.back();}
 }
 function lockHelp(){
   helpUnlocked=false;
@@ -2820,6 +2822,14 @@ document.addEventListener('keydown',e=>{
   if(document.getElementById('helpScreen').classList.contains('active')&&!helpUnlocked){
     if(e.key>='0'&&e.key<='9') pinPress(e.key);
     else if(e.key==='Backspace') pinDel();
+  }
+});
+
+window.addEventListener('popstate',function(){
+  if(document.getElementById('helpScreen').classList.contains('active')){
+    sndBack();
+    document.getElementById('helpScreen').classList.remove('active');
+    document.getElementById('appScreen').classList.add('active');
   }
 });
 
