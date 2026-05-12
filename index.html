@@ -392,6 +392,25 @@ button, input, select { font-family:var(--font-sans); }
   position:relative;
   overflow:hidden;
 }
+
+.video-overlay-icon {
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:3rem;
+  color:rgba(255,255,255,0.75);
+  background:rgba(0,0,0,0.12);
+  backdrop-filter:blur(1px);
+  pointer-events:none;
+  transition:opacity 0.25s ease;
+  z-index:5;
+}
+
+.card.playing .video-overlay-icon {
+  opacity:0;
+}
   
 .card-thumb img,
 .card-thumb video {
@@ -702,11 +721,49 @@ button, input, select { font-family:var(--font-sans); }
 
 /* See All modal */
 #seeAllModal {
-  position:fixed; inset:0; z-index:800;
-  background:rgba(0,0,0,0.9); display:none; flex-direction:column;
-  backdrop-filter:blur(8px);
+  position:fixed;
+  inset:0;
+  z-index:9000;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(15,15,15,0.96),
+      rgba(10,10,10,0.98)
+    );
+  backdrop-filter:blur(18px);
+  display:none;
+  flex-direction:column;
+  animation:fadeIn2 0.25s ease;
 }
-#seeAllGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:8px; padding:20px 28px; overflow-y:auto; flex:1; scrollbar-width:thin; scrollbar-color:#2a2a2a transparent; }
+
+#seeAllGrid {
+  display:grid;
+  grid-template-columns:
+    repeat(auto-fill,minmax(220px,1fr));
+  gap:18px;
+  padding:28px 32px 60px;
+  overflow-y:auto;
+  flex:1;
+}
+
+#seeAllGrid .card {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+#seeAllGrid .card:hover {
+  transform:scale(1.04);
+  z-index:20;
+}
+
+#seeAllGrid .card-inner {
+  border-radius:14px;
+  overflow:hidden;
+  background:#1b1b1b;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,0.35);
+}
 
 /* ══ MOBILE ══ */
 @keyframes slideUp  { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
@@ -2523,7 +2580,12 @@ function makeCard(m){
 
     // Video preview
     if(vid){
-      _vidTimer = setTimeout(()=>{ vid.play().catch(()=>{}); vid.classList.add('playing'); }, 350);
+      _vidTimer = setTimeout(() => {
+        vid.muted = true;      
+        vid.play().catch(() => {});      
+        vid.classList.add('playing');      
+        c.classList.add('playing');    
+      }, 350);
     }
     // Pop panel — slight delay so fast mouse passes don't trigger it
     _popHoverTimer = setTimeout(()=>{ showGlobalPop(m, c); }, 180);
@@ -2532,7 +2594,7 @@ function makeCard(m){
   c.addEventListener('mouseleave', e=>{
     clearTimeout(_popHoverTimer);
     clearTimeout(_vidTimer);
-    if(vid){ vid.pause(); vid.currentTime=0; vid.classList.remove('playing'); }
+    if(vid){ vid.pause(); vid.currentTime=0; vid.classList.remove('playing'); c.classList.remove('playing'); }
     // Keep pop visible if mouse moved into the pop panel itself
     const pop = document.getElementById('globalCardPop');
     if(pop && pop.contains(e.relatedTarget)) return;
@@ -2730,7 +2792,7 @@ function refreshHero(idx){
   // Media
   if(item.t === 'video'){
     const v = document.createElement('video');
-    v.src = item.u; v.autoplay = true; v.loop = false; v.playsInline = true; v.preload = 'metadata';
+    v.src = item.u; v.muted = true; v.autoplay = true; v.loop = false; v.playsInline = true; v.preload = 'metadata';
     v.muted = heroMuted;
 
     // Generate thumbnail from first frame
@@ -2762,6 +2824,11 @@ function refreshHero(idx){
     // Auto-advance when video ends (only if playlist has multiple)
     if(multi) v.onended = () => heroNav(1);
     bg.appendChild(v);
+    const icon = document.createElement('div');
+    icon.className = 'video-overlay-icon';
+    icon.innerHTML = '▶';
+
+thumb.appendChild(icon);
     heroVideoEl = v;
     muteBtn && (muteBtn.style.display='flex');
     updateMuteIcon();
@@ -2914,6 +2981,11 @@ function openWishlistView(){
   const grid = document.getElementById('seeAllGrid');
   grid.innerHTML='';
   wishlisted.forEach(m=>{ const card=makeCard(m); grid.appendChild(card); });
+
+  document.querySelectorAll('video').forEach(v => {
+    v.pause();
+  });
+  
   document.getElementById('seeAllModal').style.display='flex';
   document.body.style.overflow='hidden';
   document.querySelectorAll('.nav-link').forEach((l,i)=>l.classList.toggle('active',i===3));
@@ -2944,6 +3016,11 @@ function openSeeAll(secId, title, si){
       grid.appendChild(makeCard(m));
     });
   }
+
+  document.querySelectorAll('video').forEach(v => {
+    v.pause();
+  });
+  
   document.getElementById('seeAllModal').style.display='flex';
   document.body.style.overflow='hidden';
 }
