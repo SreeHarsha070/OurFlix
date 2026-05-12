@@ -386,7 +386,7 @@ button, input, select { font-family:var(--font-sans); }
   font-size:2rem; position:relative; overflow:hidden;
 }
 .card-thumb img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
-.card-thumb video.preview-vid { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 0.5s ease; }
+.card-thumb video.preview-vid { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:1; transition:opacity 0.5s ease; background:#111; }
 .card-thumb video.preview-vid.playing { opacity:1; }
 
 .card-label   { padding:7px 9px 9px; background:var(--surface); }
@@ -2651,9 +2651,35 @@ function refreshHero(idx){
   // Media
   if(item.t === 'video'){
     const v = document.createElement('video');
-    v.src = item.u; v.autoplay = true; v.loop = false; v.playsInline = true;
+    v.src = item.u; v.autoplay = true; v.loop = false; v.playsInline = true; v.preload = 'metadata';
     v.muted = heroMuted;
+
+    // Generate thumbnail from first frame
+    v.addEventListener('loadeddata', () => {
+      const canvas = document.createElement('canvas');
+
+      canvas.width = v.videoWidth;
+      canvas.height = v.videoHeight;
+
+      const ctx = canvas.getContext('2d');
+
+      v.currentTime = 0.1;
+
+      v.addEventListener('seeked', function capture() {
+        try {
+          ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+
+          const thumb = canvas.toDataURL('image/jpeg', 0.7);
+
+          v.setAttribute('poster', thumb);
+        } catch(e) {}
+
+        v.removeEventListener('seeked', capture);
+      });
+    });
+    
     v.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+    
     // Auto-advance when video ends (only if playlist has multiple)
     if(multi) v.onended = () => heroNav(1);
     bg.appendChild(v);
@@ -2728,7 +2754,7 @@ function openLb(m){
   const med = document.getElementById('lbMedia');
   med.innerHTML = '';
   if(m.t==='photo'){ const img=document.createElement('img'); img.src=m.u; med.appendChild(img); }
-  else { const v=document.createElement('video'); v.src=m.u; v.controls=v.autoplay=true; med.appendChild(v); }
+  else { const v=document.createElement('video'); v.src=m.u; v.controls=v.autoplay=true; v.preload = 'metadata'; v.playsInline = true; med.appendChild(v); }
   document.getElementById('lbTitle').textContent = m.n;
   document.getElementById('lbMeta').textContent  = `${PROF[cur].name} · ${m.d} · ${m.t==='video'?'Video':'Photo'}`;
   // Reset rename row
