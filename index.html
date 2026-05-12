@@ -1672,6 +1672,7 @@ function closeAccountOutside(e){if(e.target===document.getElementById('accountMo
 
 /* ══ KIDS LOCK ══ */
 function showKids(){
+  pauseAllPreviews();
   sndLock();
   closeProfileMenu(null,true);
   const ov=document.getElementById('kidsOverlay'),box=document.getElementById('lockBox');
@@ -1701,12 +1702,7 @@ let pinEntry = '';
 let helpUnlocked = false;
 
 function openHelp(){
-  document.querySelectorAll('video').forEach(v => {
-  v.pause();
-});
-
-hideGlobalPop(_activePopCard);
-  
+  pauseAllPreviews();  
   document.getElementById('appScreen').classList.remove('active');
   document.getElementById('helpScreen').classList.add('active');
   if(!helpUnlocked){
@@ -1775,6 +1771,14 @@ function updatePinDisplay(){
     const pd=document.getElementById('pd'+i);
     if(pd) pd.classList.toggle('filled',i<pinEntry.length);
   }
+}
+
+function pauseAllPreviews(){
+  document.querySelectorAll('video').forEach(v => {
+    v.pause();
+  });
+
+  hideGlobalPop(_activePopCard);
 }
 
 /* ══ HELP MEDIA LISTS ══ */
@@ -2387,6 +2391,7 @@ function saveAnniversary(){
 }
 function updateMonthsBadge(){
   if(!settings.anniversary)return;
+  pauseAllPreviews();
   const start=new Date(settings.anniversary);
   const now=new Date();
   const diff=now-start;
@@ -2745,6 +2750,7 @@ function getHeroPlaylist(){
 }
 
 function refreshHero(idx){
+  pauseAllPreviews();
   const pl = getHeroPlaylist();
   const bg = document.getElementById('heroBg');
   const ph = document.getElementById('heroPlaceholder');
@@ -2902,6 +2908,7 @@ function previewFromHelp(id, profile){
 }
 let lbCurrentId=null;
 function openLb(m){
+  pauseAllPreviews();
   sndWhoosh(); lbCurrentId = m.id;
   const med = document.getElementById('lbMedia');
   med.innerHTML = '';
@@ -2987,11 +2994,7 @@ function openWishlistView(){
   const grid = document.getElementById('seeAllGrid');
   grid.innerHTML='';
   wishlisted.forEach(m=>{ const card=makeCard(m); grid.appendChild(card); });
-
-  document.querySelectorAll('video').forEach(v => {
-    v.pause();
-  });
-  
+  pauseAllPreviews();  
   document.getElementById('seeAllModal').style.display='flex';
   document.body.style.overflow='hidden';
   document.querySelectorAll('.nav-link').forEach((l,i)=>l.classList.toggle('active',i===3));
@@ -3023,10 +3026,7 @@ function openSeeAll(secId, title, si){
     });
   }
 
-  document.querySelectorAll('video').forEach(v => {
-    v.pause();
-  });
-  hideGlobalPop(_activePopCard);
+  pauseAllPreviews();
   document.getElementById('seeAllModal').style.display='flex';
   document.body.style.overflow='hidden';
 }
